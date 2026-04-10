@@ -205,6 +205,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const totalFoodRef = useRef(0);
   const pointsRef = useRef(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pausedDuringCountdownRef = useRef(false);
 
   // ── Load persisted data + detect device ──
   useEffect(() => {
@@ -240,8 +241,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
         setGameState("paused");
         gameStateRef.current = "paused";
       } else if (gameStateRef.current === "countdown") {
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        countdownRef.current = null;
+        pausedDuringCountdownRef.current = true;
         setGameState("paused");
         gameStateRef.current = "paused";
       }
@@ -361,12 +361,20 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   // ── Game logic ──
 
   const [countdown, setCountdown] = useState(0);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const beginPlay = useCallback(() => {
-    setGameState("playing");
-    gameStateRef.current = "playing";
-  }, []);
+  useEffect(() => {
+    if (gameState !== "countdown" || countdown <= 0) return;
+    const timer = setTimeout(() => {
+      if (countdown === 1) {
+        setCountdown(0);
+        setGameState("playing");
+        gameStateRef.current = "playing";
+      } else {
+        setCountdown(countdown - 1);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [gameState, countdown]);
 
   const startGame = useCallback(() => {
     const center = Math.floor(gridSize / 2);
@@ -404,21 +412,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     setCountdown(3);
     setGameState("countdown");
     gameStateRef.current = "countdown";
-
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    let remaining = 3;
-    countdownRef.current = setInterval(() => {
-      remaining--;
-      if (remaining <= 0) {
-        clearInterval(countdownRef.current!);
-        countdownRef.current = null;
-        setCountdown(0);
-        beginPlay();
-      } else {
-        setCountdown(remaining);
-      }
-    }, 1000);
-  }, [gridSize, gamesPlayed, beginPlay]);
+  }, [gridSize, gamesPlayed]);
 
   const endGame = useCallback(
     (finalScore: number) => {
@@ -624,7 +618,6 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     }
     return () => {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, [gameState, tick, getSpeed]);
 
@@ -639,11 +632,18 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     if (gameStateRef.current === "playing") {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
+      pausedDuringCountdownRef.current = false;
       setGameState("paused");
       gameStateRef.current = "paused";
     } else if (gameStateRef.current === "paused") {
-      setGameState("playing");
-      gameStateRef.current = "playing";
+      if (pausedDuringCountdownRef.current) {
+        pausedDuringCountdownRef.current = false;
+        setGameState("countdown");
+        gameStateRef.current = "countdown";
+      } else {
+        setGameState("playing");
+        gameStateRef.current = "playing";
+      }
     }
   }, []);
 

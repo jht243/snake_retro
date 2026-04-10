@@ -24558,6 +24558,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
   const totalFoodRef = (0, import_react.useRef)(0);
   const pointsRef = (0, import_react.useRef)(0);
   const touchStartRef = (0, import_react.useRef)(null);
+  const pausedDuringCountdownRef = (0, import_react.useRef)(false);
   (0, import_react.useEffect)(() => {
     setIsTouchDevice(detectTouchDevice());
     const onGlobals = () => setIsTouchDevice(detectTouchDevice());
@@ -24585,8 +24586,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
         setGameState("paused");
         gameStateRef.current = "paused";
       } else if (gameStateRef.current === "countdown") {
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        countdownRef.current = null;
+        pausedDuringCountdownRef.current = true;
         setGameState("paused");
         gameStateRef.current = "paused";
       }
@@ -24685,11 +24685,19 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     return SKINS.find((s) => s.id === activeSkin) || SKINS[0];
   }, [activeSkin]);
   const [countdown, setCountdown] = (0, import_react.useState)(0);
-  const countdownRef = (0, import_react.useRef)(null);
-  const beginPlay = (0, import_react.useCallback)(() => {
-    setGameState("playing");
-    gameStateRef.current = "playing";
-  }, []);
+  (0, import_react.useEffect)(() => {
+    if (gameState !== "countdown" || countdown <= 0) return;
+    const timer = setTimeout(() => {
+      if (countdown === 1) {
+        setCountdown(0);
+        setGameState("playing");
+        gameStateRef.current = "playing";
+      } else {
+        setCountdown(countdown - 1);
+      }
+    }, 1e3);
+    return () => clearTimeout(timer);
+  }, [gameState, countdown]);
   const startGame = (0, import_react.useCallback)(() => {
     const center = Math.floor(gridSize / 2);
     const initialSnake = [
@@ -24722,20 +24730,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     setCountdown(3);
     setGameState("countdown");
     gameStateRef.current = "countdown";
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    let remaining = 3;
-    countdownRef.current = setInterval(() => {
-      remaining--;
-      if (remaining <= 0) {
-        clearInterval(countdownRef.current);
-        countdownRef.current = null;
-        setCountdown(0);
-        beginPlay();
-      } else {
-        setCountdown(remaining);
-      }
-    }, 1e3);
-  }, [gridSize, gamesPlayed, beginPlay]);
+  }, [gridSize, gamesPlayed]);
   const endGame = (0, import_react.useCallback)(
     (finalScore) => {
       if (gameLoopRef.current) {
@@ -24908,7 +24903,6 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     }
     return () => {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, [gameState, tick, getSpeed]);
   const changeDirection = (0, import_react.useCallback)((newDir) => {
@@ -24921,11 +24915,18 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     if (gameStateRef.current === "playing") {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
+      pausedDuringCountdownRef.current = false;
       setGameState("paused");
       gameStateRef.current = "paused";
     } else if (gameStateRef.current === "paused") {
-      setGameState("playing");
-      gameStateRef.current = "playing";
+      if (pausedDuringCountdownRef.current) {
+        pausedDuringCountdownRef.current = false;
+        setGameState("countdown");
+        gameStateRef.current = "countdown";
+      } else {
+        setGameState("playing");
+        gameStateRef.current = "playing";
+      }
     }
   }, []);
   const handleKeyDown = (0, import_react.useCallback)(
