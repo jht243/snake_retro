@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: snake-game
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: ANALYTICS_PASSWORD
+        sync: false
+      - key: OPENAI_DOMAIN_VERIFICATION_TOKEN
+        sync: false

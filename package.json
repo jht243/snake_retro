@@ -1,0 +1,35 @@
+{
+  "name": "snake-game-mcp-node",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Snake Game \u2014 classic arcade snake game as a ChatGPT widget via MCP.",
+  "keywords": [
+    "snake game",
+    "arcade",
+    "chatgpt widget",
+    "mcp"
+  ],
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "build": "cd web && pnpm run build && cd .. && node scripts/inline-bundle-encoded.js",
+    "build:web": "cd web && pnpm run build",
+    "build:inline": "node scripts/inline-bundle-encoded.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.19.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "esbuild": "^0.27.0",
+    "typescript": "^5.6.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
