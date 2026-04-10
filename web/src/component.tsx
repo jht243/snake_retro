@@ -178,6 +178,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const [shakeBoard, setShakeBoard] = useState(false);
   const [shopGlow, setShopGlow] = useState(false);
   const [shopNotified, setShopNotified] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   // ── Refs ──
   const directionRef = useRef<Direction>("RIGHT");
@@ -197,8 +198,12 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const pointsRef = useRef(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // ── Load persisted data ──
+  // ── Load persisted data + detect device ──
   useEffect(() => {
+    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(coarse || hasTouch);
+
     setHighScore(loadJSON("snake-high-score", 0));
     setPoints(loadJSON("snake-points", 0));
     pointsRef.current = loadJSON("snake-points", 0);
@@ -619,10 +624,11 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   );
 
   useEffect(() => {
+    if (isTouchDevice) return;
     const handler = (e: KeyboardEvent) => handleKeyDown(e);
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [handleKeyDown]);
+  }, [handleKeyDown, isTouchDevice]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (gameStateRef.current !== "playing") return;
@@ -792,7 +798,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
 
   const renderGameTab = () => (
     <>
-      {(gameState === "playing" || gameState === "paused") && (
+      {isTouchDevice && (gameState === "playing" || gameState === "paused") && (
         <div style={{ display: "grid", gridTemplateColumns: "58px 58px 58px", gridTemplateRows: "58px 58px", gap: 4, marginTop: 4 }}>
           <div />
           <DPadButton label="▲" dir="UP" />
@@ -808,7 +814,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
           color: "#64748b", fontSize: 10, padding: "6px 14px", cursor: "pointer",
           fontFamily: RETRO_FONT, letterSpacing: 1, textTransform: "uppercase",
         }}>
-          Pause [Space]
+          {isTouchDevice ? "Pause" : "Pause [Space]"}
         </button>
       )}
     </>
@@ -948,8 +954,8 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   return (
     <div
       ref={containerRef}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
+      tabIndex={isTouchDevice ? undefined : 0}
+      onKeyDown={isTouchDevice ? undefined : handleKeyDown}
       style={{
         width: "100%", maxWidth: 420, margin: "0 auto", padding: 20, outline: "none",
         display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
@@ -998,13 +1004,12 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
 
       {/* Game board */}
       <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        {...(isTouchDevice ? { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd } : {})}
         style={{
           position: "relative", width: boardPx, height: boardPx,
           background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
           borderRadius: 2, border: `${PIXEL_BORDER} #4338ca`, overflow: "hidden",
-          touchAction: "none",
+          ...(isTouchDevice ? { touchAction: "none" as const } : {}),
           boxShadow: screenFlash
             ? `0 0 30px ${skin.headColor}60, 0 0 60px ${skin.headColor}20, 0 4px 24px rgba(0,0,0,0.5)`
             : "0 0 15px rgba(67,56,202,0.3), 0 4px 24px rgba(0,0,0,0.5)",
@@ -1070,10 +1075,10 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
               Snake
             </div>
             <div style={{ fontSize: 10, color: "#a78bfa", maxWidth: 280, textAlign: "center", lineHeight: 2, letterSpacing: 0.5, textShadow: RETRO_GLOW("#a78bfa40") }}>
-              Arrow keys or WASD to move. Space to pause.
+              {isTouchDevice ? "Swipe or use D-pad to move." : "Arrow keys or WASD to move. Space to pause."}
             </div>
             <button onClick={startGame} style={btnStyle}>
-              &gt;&gt; Click to Start &lt;&lt;
+              {isTouchDevice ? ">> Tap to Start <<" : ">> Click to Start <<"}
             </button>
           </Overlay>
         )}
@@ -1085,11 +1090,11 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
             </div>
             {!isFocused && (
               <div style={{ fontSize: 10, color: "#94a3b8", textAlign: "center", maxWidth: 240, lineHeight: 2, letterSpacing: 0.5 }}>
-                Click here to resume
+                {isTouchDevice ? "Tap here to resume" : "Click here to resume"}
               </div>
             )}
             <button onClick={togglePause} style={btnStyle}>
-              {isFocused ? "Resume" : "Click to Resume"}
+              {isFocused ? "Resume" : (isTouchDevice ? "Tap to Resume" : "Click to Resume")}
             </button>
           </Overlay>
         )}

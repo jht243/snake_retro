@@ -24532,6 +24532,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
   const [shakeBoard, setShakeBoard] = (0, import_react.useState)(false);
   const [shopGlow, setShopGlow] = (0, import_react.useState)(false);
   const [shopNotified, setShopNotified] = (0, import_react.useState)(false);
+  const [isTouchDevice, setIsTouchDevice] = (0, import_react.useState)(false);
   const directionRef = (0, import_react.useRef)("RIGHT");
   const snakeRef = (0, import_react.useRef)([]);
   const foodRef = (0, import_react.useRef)({ x: 0, y: 0 });
@@ -24549,6 +24550,9 @@ var SnakeGame = ({ initialData: initialData2 }) => {
   const pointsRef = (0, import_react.useRef)(0);
   const touchStartRef = (0, import_react.useRef)(null);
   (0, import_react.useEffect)(() => {
+    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(coarse || hasTouch);
     setHighScore(loadJSON("snake-high-score", 0));
     setPoints(loadJSON("snake-points", 0));
     pointsRef.current = loadJSON("snake-points", 0);
@@ -24924,10 +24928,11 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     [changeDirection, togglePause]
   );
   (0, import_react.useEffect)(() => {
+    if (isTouchDevice) return;
     const handler = (e) => handleKeyDown(e);
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [handleKeyDown]);
+  }, [handleKeyDown, isTouchDevice]);
   const handleTouchStart = (0, import_react.useCallback)((e) => {
     if (gameStateRef.current !== "playing") return;
     const touch = e.touches[0];
@@ -25091,7 +25096,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     }
   );
   const renderGameTab = () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-    (gameState === "playing" || gameState === "paused") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: "58px 58px 58px", gridTemplateRows: "58px 58px", gap: 4, marginTop: 4 }, children: [
+    isTouchDevice && (gameState === "playing" || gameState === "paused") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: "58px 58px 58px", gridTemplateRows: "58px 58px", gap: 4, marginTop: 4 }, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DPadButton, { label: "\u25B2", dir: "UP" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}),
@@ -25110,7 +25115,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
       fontFamily: RETRO_FONT,
       letterSpacing: 1,
       textTransform: "uppercase"
-    }, children: "Pause [Space]" })
+    }, children: isTouchDevice ? "Pause" : "Pause [Space]" })
   ] });
   const renderLeaderboardTab = () => {
     const lb = buildLeaderboard();
@@ -25240,8 +25245,8 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     "div",
     {
       ref: containerRef,
-      tabIndex: 0,
-      onKeyDown: handleKeyDown,
+      tabIndex: isTouchDevice ? void 0 : 0,
+      onKeyDown: isTouchDevice ? void 0 : handleKeyDown,
       style: {
         width: "100%",
         maxWidth: 420,
@@ -25303,8 +25308,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "div",
           {
-            onTouchStart: handleTouchStart,
-            onTouchEnd: handleTouchEnd,
+            ...isTouchDevice ? { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd } : {},
             style: {
               position: "relative",
               width: boardPx,
@@ -25313,7 +25317,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
               borderRadius: 2,
               border: `${PIXEL_BORDER} #4338ca`,
               overflow: "hidden",
-              touchAction: "none",
+              ...isTouchDevice ? { touchAction: "none" } : {},
               boxShadow: screenFlash ? `0 0 30px ${skin.headColor}60, 0 0 60px ${skin.headColor}20, 0 4px 24px rgba(0,0,0,0.5)` : "0 0 15px rgba(67,56,202,0.3), 0 4px 24px rgba(0,0,0,0.5)",
               transform: shakeBoard ? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)` : "none",
               transition: "box-shadow 0.15s, transform 0.05s"
@@ -25375,13 +25379,13 @@ var SnakeGame = ({ initialData: initialData2 }) => {
               gameState === "idle" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Overlay, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 40 }, children: "\u{1F40D}" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 18, fontWeight: 700, color: "#22c55e", textShadow: RETRO_GLOW("#22c55e"), letterSpacing: 2, textTransform: "uppercase" }, children: "Snake" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 10, color: "#a78bfa", maxWidth: 280, textAlign: "center", lineHeight: 2, letterSpacing: 0.5, textShadow: RETRO_GLOW("#a78bfa40") }, children: "Arrow keys or WASD to move. Space to pause." }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: startGame, style: btnStyle, children: ">> Click to Start <<" })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 10, color: "#a78bfa", maxWidth: 280, textAlign: "center", lineHeight: 2, letterSpacing: 0.5, textShadow: RETRO_GLOW("#a78bfa40") }, children: isTouchDevice ? "Swipe or use D-pad to move." : "Arrow keys or WASD to move. Space to pause." }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: startGame, style: btnStyle, children: isTouchDevice ? ">> Tap to Start <<" : ">> Click to Start <<" })
               ] }),
               gameState === "paused" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Overlay, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 16, fontWeight: 700, color: "#fbbf24", textShadow: RETRO_GLOW("#fbbf24"), letterSpacing: 2, textTransform: "uppercase" }, children: isFocused ? "Paused" : "Game Paused" }),
-                !isFocused && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 10, color: "#94a3b8", textAlign: "center", maxWidth: 240, lineHeight: 2, letterSpacing: 0.5 }, children: "Click here to resume" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: togglePause, style: btnStyle, children: isFocused ? "Resume" : "Click to Resume" })
+                !isFocused && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 10, color: "#94a3b8", textAlign: "center", maxWidth: 240, lineHeight: 2, letterSpacing: 0.5 }, children: isTouchDevice ? "Tap here to resume" : "Click here to resume" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: togglePause, style: btnStyle, children: isFocused ? "Resume" : isTouchDevice ? "Tap to Resume" : "Click to Resume" })
               ] }),
               gameState === "gameover" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Overlay, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 16, fontWeight: 700, color: "#ef4444", textShadow: RETRO_GLOW("#ef4444"), letterSpacing: 3, textTransform: "uppercase" }, children: "Game Over" }),

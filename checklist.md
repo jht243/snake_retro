@@ -100,22 +100,31 @@ Requirements specific to shipping an interactive game as a ChatGPT widget (ifram
 - [x] Particles animated via `requestAnimationFrame` and auto-removed when life expires
 - [x] Toasts auto-cleaned after 1.6s
 
+## Device Detection
+
+- [x] Detect touch vs pointer device on mount via `pointer: coarse` media query + `ontouchstart` fallback
+- [x] Controls, UI hints, and event listeners are gated by device type — no overlap
+- [x] Desktop never shows D-pad or attaches swipe listeners
+- [x] Mobile never attaches keyboard listeners or shows keyboard hints
+- [x] Overlay and button text adapts per device ("Click" vs "Tap", keyboard hints vs swipe hints)
+
 ## Controls — Desktop / PC
 
 - [x] Arrow keys to steer the snake (Up, Down, Left, Right)
 - [x] WASD keys as alternative directional input
 - [x] Space bar to toggle pause / resume
 - [x] Keyboard events only processed when container is focused
+- [x] Pause button shows "[Space]" hint
 
 ## Controls — Mobile / Touch
 
-- [x] On-screen D-pad always visible during gameplay
+- [x] On-screen D-pad visible during gameplay (hidden on desktop)
 - [x] D-pad buttons large enough for comfortable touch targets (54×54)
 - [x] Swipe gestures on the game board to steer the snake
 - [x] Swipe requires minimum 20px drag to avoid accidental triggers
 - [x] `touch-action: none` on board to prevent scroll interference
-- [x] Pause button always reachable without a keyboard
+- [x] Pause button shows without keyboard shortcut hint
 
 ## Accessibility
 
-- [x] Container has `tabIndex={0}` and `outline: none` for clean focus ring
+- [x] Container has `tabIndex={0}` (desktop only) and `outline: none` for clean focus ring
