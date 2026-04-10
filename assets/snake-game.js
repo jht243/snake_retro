@@ -24438,7 +24438,7 @@ var RETRO_FONT = `"Press Start 2P", "Courier New", "Lucida Console", monospace`;
 var RETRO_GLOW = (color) => `0 0 8px ${color}, 0 0 2px ${color}`;
 var PIXEL_BORDER = "2px solid";
 var DIFFICULTY_SPEEDS = { easy: 200, medium: 130, hard: 70 };
-var BOARD_SIZES = { small: 15, medium: 20, large: 25 };
+var GRID_SIZE = 20;
 var COMBO_WINDOW_MS = 2500;
 var TOAST_DURATION_MS = 1600;
 var PARTICLE_COUNT = 8;
@@ -24517,8 +24517,7 @@ function detectTouchDevice() {
 }
 var SnakeGame = ({ initialData: initialData2 }) => {
   const difficulty = initialData2?.difficulty || "medium";
-  const boardSizeKey = initialData2?.board_size || "medium";
-  const gridSize = initialData2?.grid_cells || BOARD_SIZES[boardSizeKey] || 20;
+  const gridSize = GRID_SIZE;
   const baseSpeed = initialData2?.speed_ms || DIFFICULTY_SPEEDS[difficulty] || 130;
   const [gameState, setGameState] = (0, import_react.useState)("idle");
   const [snake, setSnake] = (0, import_react.useState)([]);
@@ -25274,13 +25273,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: boardPx }, children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 22, fontWeight: 700, color: skin.headColor, textShadow: RETRO_GLOW(skin.headColor), letterSpacing: 3, textTransform: "uppercase" }, children: "Snake" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: 12, color: "#a78bfa", letterSpacing: 1, marginTop: 6 }, children: [
-              difficulty.toUpperCase(),
-              " \xB7 ",
-              gridSize,
-              "\xD7",
-              gridSize
-            ] })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: 12, color: "#a78bfa", letterSpacing: 1, marginTop: 6 }, children: difficulty.toUpperCase() })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 20 }, children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { textAlign: "center" }, children: [

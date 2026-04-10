@@ -10,9 +10,7 @@ type TabId = "leaderboard" | "badges" | "shop";
 interface SnakeGameProps {
   initialData?: {
     difficulty?: string;
-    board_size?: string;
     speed_ms?: number;
-    grid_cells?: number;
   };
 }
 
@@ -69,7 +67,7 @@ const PIXEL_BORDER = "2px solid";
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const DIFFICULTY_SPEEDS: Record<string, number> = { easy: 200, medium: 130, hard: 70 };
-const BOARD_SIZES: Record<string, number> = { small: 15, medium: 20, large: 25 };
+const GRID_SIZE = 20;
 const COMBO_WINDOW_MS = 2500;
 const TOAST_DURATION_MS = 1600;
 const PARTICLE_COUNT = 8;
@@ -160,8 +158,7 @@ function detectTouchDevice(): boolean {
 
 const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const difficulty = initialData?.difficulty || "medium";
-  const boardSizeKey = initialData?.board_size || "medium";
-  const gridSize = initialData?.grid_cells || BOARD_SIZES[boardSizeKey] || 20;
+  const gridSize = GRID_SIZE;
   const baseSpeed = initialData?.speed_ms || DIFFICULTY_SPEEDS[difficulty] || 130;
 
   // ── Game state ──
@@ -983,7 +980,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
             Snake
           </div>
           <div style={{ fontSize: 12, color: "#a78bfa", letterSpacing: 1, marginTop: 6 }}>
-            {difficulty.toUpperCase()} &middot; {gridSize}&times;{gridSize}
+            {difficulty.toUpperCase()}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>

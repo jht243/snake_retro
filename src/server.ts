@@ -175,7 +175,7 @@ function widgetMeta(widget: SnakeGameWidget, bustCache: boolean = false) {
   return {
     "openai/outputTemplate": templateUri,
     "openai/widgetDescription":
-      "Snake Retro: Neon Arcade — a retro-styled snake game with combo streaks, unlockable skins, badges, and a leaderboard. Call this tool with NO arguments to start playing. Optionally pass difficulty (easy, medium, hard) or board_size (small, medium, large).",
+      "Snake Retro: Neon Arcade — a retro-styled snake game with combo streaks, unlockable skins, badges, and a leaderboard. Call this tool with NO arguments to start playing. Optionally pass difficulty (easy, medium, hard).",
     "openai/componentDescriptions": {
       "game-board":
         "The main game canvas where the snake moves, eats food, and grows. Displays particle effects, screen flash, and combo indicators during play.",
@@ -203,36 +203,36 @@ function widgetMeta(widget: SnakeGameWidget, bustCache: boolean = false) {
     ],
     "openai/sampleConversations": [
       {
-        user: "Let me play snake",
+        user: "I want to play snake",
         assistant:
-          "Here's Snake Retro: Neon Arcade! Steer the snake to eat food, chain combos for bonus points, and unlock skins and badges as you play.",
+          "Here you go — enjoy the game!",
       },
       {
-        user: "Play snake on hard mode",
+        user: "I'm bored, what can I do?",
         assistant:
-          "Snake Retro on hard difficulty — the snake moves much faster! Chase combos and try to beat the leaderboard. Good luck!",
+          "How about a quick game of Snake? Here you go!",
       },
       {
-        user: "I want to play a game",
+        user: "What's a good game to play right now?",
         assistant:
-          "Here's Snake Retro — a neon arcade snake game with badges, skins, and a leaderboard. Use arrow keys on desktop or swipe on mobile to play!",
+          "Try Snake Retro — it's a fun retro arcade game you can play right here!",
       },
       {
-        user: "Play snake on a small board",
+        user: "I want to play a fun retro game",
         assistant:
-          "Here's Snake Retro on a compact 15×15 board — tighter space means quicker decisions! Eat fast to chain combos.",
+          "Here's Snake Retro for you — have fun!",
       },
       {
-        user: "Easy snake game on a large board",
+        user: "Play snake",
         assistant:
-          "Snake Retro on easy with a big 25×25 board — plenty of room to learn the ropes and collect badges!",
+          "Here you go!",
       },
     ],
     "openai/starterPrompts": [
-      "Play Snake Retro",
-      "Snake game on hard mode",
-      "Play snake on a small board",
-      "Easy snake on a large board",
+      "Play Snake",
+      "I'm bored, let me play something",
+      "I want to play a game",
+      "Play a fun retro game",
     ],
     "openai/widgetPrefersBorder": true,
     "openai/widgetCSP": {
@@ -274,14 +274,8 @@ const toolInputSchema = {
     difficulty: {
       type: "string",
       description:
-        "Game difficulty. easy = 200ms per step (relaxed), medium = 130ms (default), hard = 70ms (fast). Affects snake speed only; scoring and combos work the same on all levels.",
+        "Game difficulty. easy = relaxed speed, medium = default, hard = fast. Affects snake speed only; scoring and combos work the same on all levels.",
       enum: ["easy", "medium", "hard"],
-    },
-    board_size: {
-      type: "string",
-      description:
-        "Board grid size. small = 15×15 cells (tight, more wall encounters), medium = 20×20 (default), large = 25×25 (spacious). Larger boards give more room but require longer games to fill the leaderboard.",
-      enum: ["small", "medium", "large"],
     },
   },
   required: [],
@@ -291,21 +285,18 @@ const toolInputSchema = {
 
 const toolInputParser = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-  board_size: z.enum(["small", "medium", "large"]).optional(),
 });
 
 const tools: Tool[] = widgets.map((widget) => ({
   name: widget.id,
   description:
-    "Play Snake Retro: Neon Arcade — a retro snake game with combos, badges, skins, and a leaderboard. Call this tool with NO arguments to start with default settings. Optionally set difficulty (easy, medium, hard) or board_size (small, medium, large).",
+    "Play Snake Retro: Neon Arcade — a retro snake game with combos, badges, skins, and a leaderboard. Call this tool with NO arguments to start with default settings. Optionally set difficulty (easy, medium, hard).",
   inputSchema: toolInputSchema,
   outputSchema: {
     type: "object",
     properties: {
       difficulty: { type: "string" },
-      board_size: { type: "string" },
       speed_ms: { type: "number" },
-      grid_cells: { type: "number" },
     },
   },
   title: widget.title,
@@ -449,41 +440,26 @@ function createSnakeRetroServer(): Server {
           else if (/\beasy\b/i.test(userText)) args.difficulty = "easy";
         }
 
-        if (!args.board_size) {
-          if (/\bsmall\b/i.test(userText)) args.board_size = "small";
-          else if (/\blarge\b|\bbig\b/i.test(userText)) args.board_size = "large";
-        }
-
         const difficulty = args.difficulty || "medium";
-        const boardSize = args.board_size || "medium";
 
         const speedMap: Record<string, number> = {
           easy: 200,
           medium: 130,
           hard: 70,
         };
-        const sizeMap: Record<string, number> = {
-          small: 15,
-          medium: 20,
-          large: 25,
-        };
 
         const speedMs = speedMap[difficulty];
-        const gridCells = sizeMap[boardSize];
 
         const responseTime = Date.now() - startTime;
 
         const inferredQuery: string[] = [];
         if (difficulty !== "medium") inferredQuery.push(`difficulty: ${difficulty}`);
-        if (boardSize !== "medium") inferredQuery.push(`board: ${boardSize} (${gridCells}×${gridCells})`);
         inferredQuery.push(`speed: ${speedMs}ms`);
 
         logAnalytics("tool_call_success", {
           toolName: request.params.name,
           difficulty,
-          boardSize,
           speedMs,
-          gridCells,
           inferredQuery: inferredQuery.join(", "),
           responseTime,
           device: deviceCategory,
@@ -495,9 +471,7 @@ function createSnakeRetroServer(): Server {
 
         const structured = {
           difficulty,
-          board_size: boardSize,
           speed_ms: speedMs,
-          grid_cells: gridCells,
         } as const;
 
         const metaForReturn = {
