@@ -195,6 +195,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const particleIdRef = useRef(0);
   const totalFoodRef = useRef(0);
   const pointsRef = useRef(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // ── Load persisted data ──
   useEffect(() => {
@@ -623,6 +624,29 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     return () => window.removeEventListener("keydown", handler);
   }, [handleKeyDown]);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (gameStateRef.current !== "playing") return;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (gameStateRef.current !== "playing" || !touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    const MIN_SWIPE = 20;
+    if (Math.abs(dx) < MIN_SWIPE && Math.abs(dy) < MIN_SWIPE) return;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      changeDirection(dx > 0 ? "RIGHT" : "LEFT");
+    } else {
+      changeDirection(dy > 0 ? "DOWN" : "UP");
+    }
+  }, [changeDirection]);
+
   const buySkin = useCallback(
     (skinId: string) => {
       const skin = SKINS.find((s) => s.id === skinId);
@@ -751,7 +775,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     <button
       onPointerDown={(e) => { e.preventDefault(); changeDirection(dir); }}
       style={{
-        width: 44, height: 44, borderRadius: 2, border: `${PIXEL_BORDER} #4338ca`,
+        width: 54, height: 54, borderRadius: 2, border: `${PIXEL_BORDER} #4338ca`,
         background: "rgba(67,56,202,0.15)", color: "#a78bfa",
         fontSize: 18, fontWeight: 700, cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -769,7 +793,7 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
   const renderGameTab = () => (
     <>
       {(gameState === "playing" || gameState === "paused") && (
-        <div style={{ display: "grid", gridTemplateColumns: "48px 48px 48px", gridTemplateRows: "48px 48px", gap: 4, marginTop: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "58px 58px 58px", gridTemplateRows: "58px 58px", gap: 4, marginTop: 4 }}>
           <div />
           <DPadButton label="▲" dir="UP" />
           <div />
@@ -974,10 +998,13 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
 
       {/* Game board */}
       <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         style={{
           position: "relative", width: boardPx, height: boardPx,
           background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
           borderRadius: 2, border: `${PIXEL_BORDER} #4338ca`, overflow: "hidden",
+          touchAction: "none",
           boxShadow: screenFlash
             ? `0 0 30px ${skin.headColor}60, 0 0 60px ${skin.headColor}20, 0 4px 24px rgba(0,0,0,0.5)`
             : "0 0 15px rgba(67,56,202,0.3), 0 4px 24px rgba(0,0,0,0.5)",

@@ -24547,6 +24547,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
   const particleIdRef = (0, import_react.useRef)(0);
   const totalFoodRef = (0, import_react.useRef)(0);
   const pointsRef = (0, import_react.useRef)(0);
+  const touchStartRef = (0, import_react.useRef)(null);
   (0, import_react.useEffect)(() => {
     setHighScore(loadJSON("snake-high-score", 0));
     setPoints(loadJSON("snake-points", 0));
@@ -24927,6 +24928,25 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [handleKeyDown]);
+  const handleTouchStart = (0, import_react.useCallback)((e) => {
+    if (gameStateRef.current !== "playing") return;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+  const handleTouchEnd = (0, import_react.useCallback)((e) => {
+    if (gameStateRef.current !== "playing" || !touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    const MIN_SWIPE = 20;
+    if (Math.abs(dx) < MIN_SWIPE && Math.abs(dy) < MIN_SWIPE) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      changeDirection(dx > 0 ? "RIGHT" : "LEFT");
+    } else {
+      changeDirection(dy > 0 ? "DOWN" : "UP");
+    }
+  }, [changeDirection]);
   const buySkin = (0, import_react.useCallback)(
     (skinId) => {
       const skin2 = SKINS.find((s) => s.id === skinId);
@@ -25050,8 +25070,8 @@ var SnakeGame = ({ initialData: initialData2 }) => {
         changeDirection(dir);
       },
       style: {
-        width: 44,
-        height: 44,
+        width: 54,
+        height: 54,
         borderRadius: 2,
         border: `${PIXEL_BORDER} #4338ca`,
         background: "rgba(67,56,202,0.15)",
@@ -25071,7 +25091,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     }
   );
   const renderGameTab = () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-    (gameState === "playing" || gameState === "paused") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: "48px 48px 48px", gridTemplateRows: "48px 48px", gap: 4, marginTop: 4 }, children: [
+    (gameState === "playing" || gameState === "paused") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: "58px 58px 58px", gridTemplateRows: "58px 58px", gap: 4, marginTop: 4 }, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DPadButton, { label: "\u25B2", dir: "UP" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}),
@@ -25283,6 +25303,8 @@ var SnakeGame = ({ initialData: initialData2 }) => {
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "div",
           {
+            onTouchStart: handleTouchStart,
+            onTouchEnd: handleTouchEnd,
             style: {
               position: "relative",
               width: boardPx,
@@ -25291,6 +25313,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
               borderRadius: 2,
               border: `${PIXEL_BORDER} #4338ca`,
               overflow: "hidden",
+              touchAction: "none",
               boxShadow: screenFlash ? `0 0 30px ${skin.headColor}60, 0 0 60px ${skin.headColor}20, 0 4px 24px rgba(0,0,0,0.5)` : "0 0 15px rgba(67,56,202,0.3), 0 4px 24px rgba(0,0,0,0.5)",
               transform: shakeBoard ? `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)` : "none",
               transition: "box-shadow 0.15s, transform 0.05s"
