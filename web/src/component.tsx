@@ -145,6 +145,17 @@ function rainbowColor(index: number): string {
   return `hsl(${hue}, 90%, 60%)`;
 }
 
+function detectTouchDevice(): boolean {
+  const oa = (window as any).openai;
+  if (oa?.userAgent && typeof oa.userAgent === "string") {
+    const ua = oa.userAgent.toLowerCase();
+    return /iphone|ipad|ipod|android|mobile|tablet/.test(ua);
+  }
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+  const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  return coarse || hasTouch;
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
@@ -200,9 +211,10 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
 
   // ── Load persisted data + detect device ──
   useEffect(() => {
-    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
-    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    setIsTouchDevice(coarse || hasTouch);
+    setIsTouchDevice(detectTouchDevice());
+
+    const onGlobals = () => setIsTouchDevice(detectTouchDevice());
+    window.addEventListener("openai:set_globals", onGlobals, { passive: true });
 
     setHighScore(loadJSON("snake-high-score", 0));
     setPoints(loadJSON("snake-points", 0));
@@ -216,6 +228,8 @@ const SnakeGame: React.FC<SnakeGameProps> = ({ initialData }) => {
     const earnedIds: string[] = loadJSON("snake-badges", []);
     setBadges(BADGE_DEFS.map((b) => ({ ...b, earned: earnedIds.includes(b.id) })));
     setShopNotified(loadJSON("snake-shop-notified", false));
+
+    return () => window.removeEventListener("openai:set_globals", onGlobals);
   }, []);
 
   // ── Focus tracking ──

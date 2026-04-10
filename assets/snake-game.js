@@ -24505,6 +24505,16 @@ function rainbowColor(index) {
   const hue = index * 25 % 360;
   return `hsl(${hue}, 90%, 60%)`;
 }
+function detectTouchDevice() {
+  const oa = window.openai;
+  if (oa?.userAgent && typeof oa.userAgent === "string") {
+    const ua = oa.userAgent.toLowerCase();
+    return /iphone|ipad|ipod|android|mobile|tablet/.test(ua);
+  }
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+  const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  return coarse || hasTouch;
+}
 var SnakeGame = ({ initialData: initialData2 }) => {
   const difficulty = initialData2?.difficulty || "medium";
   const boardSizeKey = initialData2?.board_size || "medium";
@@ -24550,9 +24560,9 @@ var SnakeGame = ({ initialData: initialData2 }) => {
   const pointsRef = (0, import_react.useRef)(0);
   const touchStartRef = (0, import_react.useRef)(null);
   (0, import_react.useEffect)(() => {
-    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
-    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    setIsTouchDevice(coarse || hasTouch);
+    setIsTouchDevice(detectTouchDevice());
+    const onGlobals = () => setIsTouchDevice(detectTouchDevice());
+    window.addEventListener("openai:set_globals", onGlobals, { passive: true });
     setHighScore(loadJSON("snake-high-score", 0));
     setPoints(loadJSON("snake-points", 0));
     pointsRef.current = loadJSON("snake-points", 0);
@@ -24564,6 +24574,7 @@ var SnakeGame = ({ initialData: initialData2 }) => {
     const earnedIds = loadJSON("snake-badges", []);
     setBadges(BADGE_DEFS.map((b) => ({ ...b, earned: earnedIds.includes(b.id) })));
     setShopNotified(loadJSON("snake-shop-notified", false));
+    return () => window.removeEventListener("openai:set_globals", onGlobals);
   }, []);
   (0, import_react.useEffect)(() => {
     const onFocus = () => setIsFocused(true);

@@ -100,13 +100,22 @@ Requirements specific to shipping an interactive game as a ChatGPT widget (ifram
 - [x] Particles animated via `requestAnimationFrame` and auto-removed when life expires
 - [x] Toasts auto-cleaned after 1.6s
 
-## Device Detection
+## Device Detection (Apps SDK pattern for all games)
 
-- [x] Detect touch vs pointer device on mount via `pointer: coarse` media query + `ontouchstart` fallback
+Per the [Apps SDK Reference](https://developers.openai.com/apps-sdk/reference), ChatGPT
+provides `window.openai.userAgent` as a context signal for the host user's device.
+Use this as the **primary** detection method inside ChatGPT widgets; fall back to
+browser APIs for standalone / non-ChatGPT contexts.
+
+- [x] **Primary**: read `window.openai.userAgent` (official Apps SDK API) and parse for mobile indicators (`iphone`, `ipad`, `android`, `mobile`, `tablet`)
+- [x] **Fallback**: use `pointer: coarse` media query + `ontouchstart` / `maxTouchPoints` for standalone contexts where `window.openai` is unavailable
+- [x] Re-detect on `openai:set_globals` event since `userAgent` may arrive after initial mount
+- [x] Detection extracted into reusable `detectTouchDevice()` helper
 - [x] Controls, UI hints, and event listeners are gated by device type — no overlap
 - [x] Desktop never shows D-pad or attaches swipe listeners
 - [x] Mobile never attaches keyboard listeners or shows keyboard hints
 - [x] Overlay and button text adapts per device ("Click" vs "Tap", keyboard hints vs swipe hints)
+- [x] Server also receives `_meta["openai/userAgent"]` in tool calls for server-side device analytics
 
 ## Controls — Desktop / PC
 
