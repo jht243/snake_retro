@@ -239,8 +239,8 @@ function widgetMeta(widget: SnakeGameWidget, bustCache: boolean = false) {
       connect_domains: [] as string[],
       script_src_domains: [] as string[],
       resource_domains: [
-        "fonts.googleapis.com",
-        "fonts.gstatic.com",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
       ],
     },
     "openai/widgetDomain": "https://web-sandbox.oaiusercontent.com",
