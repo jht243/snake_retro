@@ -416,6 +416,20 @@ function createSnakeRetroServer(): Server {
           device: deviceCategory,
         });
 
+        try {
+          fetch((process.env.TRACKER_URL ?? "") + "/api/ingest/tool-call", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-ingest-secret": process.env.TRACKER_INGEST_SECRET ?? "",
+            },
+            body: JSON.stringify({
+              app_id: "d6faa821-a71e-4f46-914e-c239f0804892",
+              tool_name: request.params.name,
+            }),
+          }).catch(() => {});
+        } catch {}
+
         const widgetMetadata = widgetMeta(widget, false);
 
         const metaForReturn = {
